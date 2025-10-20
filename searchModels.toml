@@ -1,0 +1,13 @@
+search_folder = "/home/jan/local/home/jan/development/cad/KiCad-Spice-Library-master/Models/Manufacturer"
+destination_folder = "/home/jan/local/home/jan/development/cad/KiCad-Spice-Library-master/my_lib"
+check_recursive = false
+check_model = true
+check_subckt = true
+history = [
+    "SUB614",
+    "FZT",
+    "SUB614",
+    "FZT",
+    "Z",
+]
+history_length = "10"
