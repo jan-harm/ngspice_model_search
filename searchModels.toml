@@ -15,3 +15,8 @@ history = [
     "Z",
 ]
 history_length = "11"
+decode_priority = [
+    "ISO-8859-15",
+    "utf-8",
+    "SHIFT_JIS",
+]

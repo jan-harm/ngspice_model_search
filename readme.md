@@ -1,6 +1,7 @@
 # simulation model retriever
 
 intended to make finding models easy.
+inspired by: https://github.com/kicad-spice-library/KiCad-Spice-Library
 
 targets
 - search thru all text files and remember the extension.

@@ -14,17 +14,16 @@ import tomli_w
 
 from spice_search.get_models import get_models
 
-# todo: utf-8 errors uncheck file
-# todo: checkin in github
+# todo: make decoding selection and add to file decoding
 # todo: remove print statements
-# todo: save result as .lib or .cir file
+# todo: save result as .lib or .cir file (now cntrl-a, ctrl-c/v)
 # todo: open file in editor with encoding options (also from search menu)
-# todo: open folder in file broser
-# todo: make menu specific
+# todo: open edit with proper decoding
+# todo: make local menu specific
 
 configuration_file = "searchModels.toml"
 
-
+initial_decode_priority = ['utf-8', 'ISO-8859-15', 'SHIFT_JIS']
 
 #search parameters
 # todo: transfer patterns to config
@@ -36,6 +35,7 @@ search_subckt = {
     'continuation': True,  # .ENDS is the end
     'max_comment_count' : 20  # comments before the subckt is found
 }
+
 search_model = {
     'model': '.MODEL',  # name to search for
     'model_pos': 2,      # which word for the model (after a split)
@@ -44,8 +44,6 @@ search_model = {
     'continuation': False,  # with '+' or //
     'max_comment_count': 2  # comments before the .model is found
 }
-
-
 
 
 class MyFrame(SearchFrame):
@@ -82,6 +80,12 @@ class MyFrame(SearchFrame):
         if len(self.history) > self.history_length:
             self.history = self.history[:self.history_length]
         self.search_ctrl_1.SetMenu(self.make_menu())
+
+        # set file encoding
+        if not 'decode_priority' in self.config:
+            self.config['decode_priority'] = initial_decode_priority
+        self.decode_priority = self.config['decode_priority']
+        self.list_box_priority.Set(self.decode_priority)
 
 
     def save_config(self):
@@ -185,7 +189,7 @@ class MyFrame(SearchFrame):
             if self.checkbox_subckt.Value:
                 for k, v in search_files.items():
                     # print(str(v[0]))
-                    for enc in gm.encodings_to_test:
+                    for enc in self.decode_priority:
                         found = False
                         try:
                             all_result_list, model_count, error_list = gm.get_models(v[0], all_result_list, recursive, enc, **search_subckt)
@@ -211,7 +215,7 @@ class MyFrame(SearchFrame):
             # get .models result
             if self.checkbox_model.Value:
                 for k, v in search_files.items():
-                    for enc in gm.encodings_to_test:
+                    for enc in self.decode_priority:
                         found = False
                         try:
                             all_result_list, model_count, error_list = gm.get_models(v[0], all_result_list, recursive, enc, **search_model)
@@ -239,10 +243,10 @@ class MyFrame(SearchFrame):
             # update model list
             present_model_list = self.panel_list_models.GetList()
             # present_model_list_models =
-            for k, v in all_result_list.items():
-                if not v[1] in [ v[0] for k, v in present_model_list.items()]:
+            for k, value in all_result_list.items():
+                if not value[1] in [ v[0] for k, v in present_model_list.items()]:
                     index = len(present_model_list) + 1
-                    present_model_list[index] = [ v[1] , 0 , True]  # model, count, checked
+                    present_model_list[index] = [ value[1] , 0 , True]  # model, count, checked
             # update model count
             for k, v in present_model_list.items():
                 #clear count
@@ -376,8 +380,34 @@ class MyFrame(SearchFrame):
         self.config['history_length'] = str(self.text_ctrl_history_length.Value)
         self.save_config()
 
-    def on_add(self, event):
-        self.panel_list_folders.AppendList({1: folder_data[2]})
+    # def on_add(self, event):
+    #     self.panel_list_folders.AppendList({1: folder_data[2]})
+
+    def on_button_priority_up(self, event):
+        selected = self.list_box_priority.GetSelection()
+        if selected == wx.NOT_FOUND:
+            selected = 0
+            self.list_box_priority.SetSelection(selected)
+        if selected > 0 and selected < len(self.decode_priority):
+            self.decode_priority[selected-1], self.decode_priority[selected] = (self.decode_priority[selected],
+                                                                                self.decode_priority[selected-1])
+            self.list_box_priority.Set(self.decode_priority)
+            self.list_box_priority.SetSelection(selected-1)
+            self.save_config()
+
+
+    def on_button_priority_down(self, event):
+        selected = self.list_box_priority.GetSelection()
+        if selected == wx.NOT_FOUND:
+            selected = 0
+            self.list_box_priority.SetSelection(selected)
+        if selected >= 0 and selected < len(self.decode_priority)-1:
+            self.decode_priority[selected+1], self.decode_priority[selected] = (self.decode_priority[selected],
+                                                                                self.decode_priority[selected+1])
+            self.list_box_priority.Set(self.decode_priority)
+            self.list_box_priority.SetSelection(selected+1)
+            self.config['decode_priority'] = self.decode_priority
+            self.save_config()
 
 
 
