@@ -8,6 +8,8 @@ import wx
 import wx.lib.mixins.listctrl as listmix
 
 import images
+import subprocess
+from pathlib import Path
 
 #---------------------------------------------------------------------------
 class Log():
@@ -146,6 +148,9 @@ class NbListCtrlPanel(wx.Panel, listmix.ColumnSorterMixin):
 
         self.itemDataMap = dict()
         self.list_is_empty = True
+        self.currentItem = 0
+
+        self.menu_commands = [ {'text': 'open with editor', 'command': "subprocces.run", 'pars': "gedit %e %p" } ] # check on shell commands
 
         # self.PopulateList(list_dict)
 
@@ -308,12 +313,25 @@ class NbListCtrlPanel(wx.Panel, listmix.ColumnSorterMixin):
 
         if item != wx.NOT_FOUND and flags & wx.LIST_HITTEST_ONITEM:
             self.list.Select(item)
+            print(f'item {item} selected')
+            self.currentItem = item
 
         event.Skip()
 
     def getColumnText(self, index, col):
         item = self.list.GetItem(index, col)
         return item.GetText()
+
+    def call_shell_command_from_local_menu(self, args=None):
+        """ call local shell for edit or file menu """
+        if not args: return
+        if Path(args[0]).resolve().is_dir():
+            print('open folder')
+            sub = subprocess.Popen(["nautilus", args[0]])
+        else:
+            print('open file')
+            subprocess.Popen(["gedit", args[0]])
+        print('done')
 
     def OnItemSelected(self, event):
         ##print(event.GetItem().GetTextColour())
@@ -422,7 +440,7 @@ class NbListCtrlPanel(wx.Panel, listmix.ColumnSorterMixin):
             self.popupID8 = wx.NewIdRef()
             self.popupID9 = wx.NewIdRef()
 
-            self.Bind(wx.EVT_MENU, self.OnPopupOne, id=self.popupID1)
+            self.Bind(wx.EVT_MENU, self.OnPopupOpen, id=self.popupID1)
             self.Bind(wx.EVT_MENU, self.OnPopupTwo, id=self.popupID2)
             self.Bind(wx.EVT_MENU, self.OnPopupThree, id=self.popupID3)
             self.Bind(wx.EVT_MENU, self.OnPopupFour, id=self.popupID4)
@@ -435,25 +453,31 @@ class NbListCtrlPanel(wx.Panel, listmix.ColumnSorterMixin):
         # make a menu
         menu = wx.Menu()
         # add some items
-        menu.Append(self.popupID1, "FindItem tests")
-        menu.Append(self.popupID2, "Iterate Selected")
-        menu.Append(self.popupID3, "ClearAll and repopulate")
-        menu.Append(self.popupID4, "DeleteAllItems")
-        menu.Append(self.popupID5, "GetItem")
-        menu.Append(self.popupID6, "Edit")
+        menu.Append(self.popupID1, "Open")   # specific item (open file or folder)
+        menu.Append(self.popupID2, "Iterate Selected tbd")
+        menu.Append(self.popupID3, "ClearAll and repopulate tbd")
+        menu.Append(self.popupID4, "DeleteAllItems tbd")
+        menu.Append(self.popupID5, "GetItem tbd ")
+        menu.Append(self.popupID6, "Edit tbd")
         menu.Append(self.popupID7, "Check All Boxes")
         menu.Append(self.popupID8, "UnCheck All Boxes")
-        menu.Append(self.popupID9, "Get Checked Items")
+        menu.Append(self.popupID9, "Get Checked Items tbd")
 
         # Popup the menu.  If an item is selected then its handler
         # will be called before PopupMenu returns.
         self.PopupMenu(menu)
         menu.Destroy()
 
-    def OnPopupOne(self, event):
-        self.log.WriteText("Popup one\n")
-        print("FindItem:", self.list.FindItem(-1, "Roxette"))
-        print("FindItemData:", self.list.FindItemData(-1, 11))
+    def OnPopupOpen(self, event):
+        self.log.WriteText("Popup open\n")
+        item = self.list.GetItem(self.currentItem)
+        self.log.WriteText("file: %s, Id:%s, Data:%s" %(item.Text,
+                                                       item.Id,
+                                                       self.list.GetItemData(self.currentItem)))
+        self.call_shell_command_from_local_menu([item.Text])
+        # self.list.GetItemText(self.currentItem))
+
+
 
     def OnPopupTwo(self, event):
         self.log.WriteText("Selected items:\n")

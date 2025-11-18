@@ -6,6 +6,8 @@ from tkinter import EXCEPTION
 
 field_delimiters = '()=,' # according ngspice might be different in LT or P spice
 
+encodings_to_test = ['utf-8', 'ISO-8859-15', 'SHIFT_JIS']
+
 class StateMachine:
     """ simple FSM to control parsing"""
     def __init__(self):
@@ -32,7 +34,7 @@ class StateMachine:
         return self.get()
 
 
-def get_models(file_path, model_list={}, recursive=True, **search_arguments):
+def get_models(file_path, model_list={}, recursive=True, encoding='utf-8', **search_arguments):
     """search for models in file according to search_arguments
     retuns a dict { cnt: [ model, name , callable line, True]} """
     if model_list is None or len(model_list) == 0:
@@ -49,59 +51,61 @@ def get_models(file_path, model_list={}, recursive=True, **search_arguments):
     last_comment = 1
     recursive_cnt = 0
     active_line = ''
-    try:
-        for line in open(file_path):
-            line_cnt += 1
-            if state == 'follow_up':
-                if '+' in line:
-                    nline = line.split('+')[1]
-                    sline = active_line.split() + nline.split()
+    error_list = []
+
+    for line in open(file_path, encoding=encoding):
+        line_cnt += 1
+        if state == 'follow_up':
+            if '+' in line:
+                nline = line.split('+')[1]
+                sline = active_line.split() + nline.split()
+                try:
+                    found_model_type = sline[search_args['model_pos']]
+                    for a in field_delimiters:
+                        if a in found_model_type:
+                            found_model_type = found_model_type.split(a)[0]
+                    model_list[model_cnt] = [sline[search_args['name_pos']], found_model_type, file_path, line, True]
+                    model_count += 1
+                    model_cnt += 1
+                except IndexError:
+                    error_list.append(f'follow up error in file: {str(file_path)}')
+                    error_list.append(f'          error at line: {line_cnt}')
+                    error_list.append(f'          error in line: {line}')
+            state.set_next('awaiting')
+            state.go_next()
+
+        if state == 'awaiting':
+            if recursive or recursive_cnt == 0:
+                if search_args['model'] == line[0:len(search_args['model'])].upper():
                     try:
-                        found_model_type = sline[search_args['model_pos']]
-                        for a in field_delimiters:
-                            if a in found_model_type:
-                                found_model_type = found_model_type.split(a)[0]
-                        model_list[model_cnt] = [sline[search_args['name_pos']], found_model_type, file_path, line, True]
-                        model_count += 1
-                        model_cnt += 1
+                        sline = line.split()
+                        if len(sline) <3: # we cannot decode
+                            active_line = line
+                            state.set_next('follow_up')
+                            state.go_next()
+                        else:
+                            found_model_type = sline[search_args['model_pos']]
+                            for a in field_delimiters:
+                                if a in found_model_type:
+                                    found_model_type = found_model_type.split(a)[0]
+                            model_list[model_cnt] = [sline[search_args['name_pos']] , found_model_type, file_path, line, True]
+                            model_count += 1
+                            model_cnt += 1
+
+                            if '*' in found_model_type:
+                                pass
                     except IndexError:
-                        print(f'error in file: {str(file_path)}')
-                        print(f'error at line: {line_cnt}')
-                        print(f'error in line: {line}')
-                state.set_next('awaiting')
-                state.go_next()
+                        error_list.append(f'awaiting error in file: {str(file_path)}')
+                        error_list.append(f'         error at line: {line_cnt}')
+                        error_list.append(f'         error in line: {line}')
 
-            if state == 'awaiting':
-                if recursive or recursive_cnt == 0:
-                    if search_args['model'] in line.upper():
-                        try:
-                            sline = line.split()
-                            if len(sline) <3: # we cannot decode
-                                active_line = line
-                                state.set_next('follow_up')
-                                state.go_next()
-                            else:
-                                found_model_type = sline[search_args['model_pos']]
-                                for a in field_delimiters:
-                                    if a in found_model_type:
-                                        found_model_type = found_model_type.split(a)[0]
-                                model_list[model_cnt] = [sline[search_args['name_pos']] , found_model_type, file_path, line, True]
-                                model_count += 1
-                                model_cnt += 1
-                        except IndexError:
-                            print(f'error in file: {str(file_path)}')
-                            print(f'error at line: {line_cnt}')
-                            print(f'error in line: {line}')
-
-                if '.SUBCKT' in line.upper():
-                    recursive_cnt += 1
-                if '.ENDS' in line.upper() and recursive_cnt > 0:
-                    recursive_cnt -= 1
-    except  UnicodeDecodeError:
-        pass
+            if '.SUBCKT' in line.upper():
+                recursive_cnt += 1
+            if '.ENDS' in line.upper() and recursive_cnt > 0:
+                recursive_cnt -= 1
 
 
-    return model_list, model_count
+    return model_list, model_count, error_list
 
 def get_model_body(file_path, model_name, recursive=True, **search_arguments):
     """search for models in file according to search_arguments

@@ -9,18 +9,25 @@ from spice_search import get_folders, get_files as gf, get_models as gm
 import tomli
 import tomli_w
 
-# todo check multiple check  selection
-# todo: fix sorting on search, extension and models
+
+
+
+from spice_search.get_models import get_models
+
 # todo: utf-8 errors uncheck file
 # todo: checkin in github
-# todo: add log to config screen (for emtpy files, non utf8 files and weird models)
+# todo: remove print statements
+# todo: save result as .lib or .cir file
+# todo: open file in editor with encoding options (also from search menu)
+# todo: open folder in file broser
+# todo: make menu specific
 
 configuration_file = "searchModels.toml"
 
 
 
 #search parameters
-# todo: trannsfer patterns to config
+# todo: transfer patterns to config
 search_subckt = {
     'model': '.SUBCKT',  # name to search for
     'model_pos': 0,      # which word for the model (after a split)
@@ -32,11 +39,12 @@ search_subckt = {
 search_model = {
     'model': '.MODEL',  # name to search for
     'model_pos': 2,      # which word for the model (after a split)
-    'name_pos':  1,      # which wod is the name of the model
+    'name_pos':  1,      # which word is the name of the model
     'model_end': '',
     'continuation': False,  # with '+' or //
     'max_comment_count': 2  # comments before the .model is found
 }
+
 
 
 
@@ -73,7 +81,7 @@ class MyFrame(SearchFrame):
         self.history = self.config.get('history', [])
         if len(self.history) > self.history_length:
             self.history = self.history[:self.history_length]
-        self.search_ctrl_1.SetMenu(self.MakeMenu())
+        self.search_ctrl_1.SetMenu(self.make_menu())
 
 
     def save_config(self):
@@ -110,16 +118,16 @@ class MyFrame(SearchFrame):
             dlg.ShowModal()
             dlg.Destroy()
         else:
-            print(' start searching in ...')
+            self.log(' start searching in ...')
             if not path.is_dir():
                 path = path.parent
-            print(path)
+            self.log(str(path))
             # update history menu
             if search_string != "" and ((self.history_length) == 0 or search_string != self.history[0]):
                 self.history.insert(0, search_string)
                 if len(self.history) > self.history_length:
                     self.history.pop(-1)
-                self.search_ctrl_1.SetMenu(self.MakeMenu())
+                self.search_ctrl_1.SetMenu(self.make_menu())
                 self.config['history'] = self.history
                 self.save_config()
 
@@ -176,9 +184,22 @@ class MyFrame(SearchFrame):
             # get subckt results
             if self.checkbox_subckt.Value:
                 for k, v in search_files.items():
-                    print(str(v[0]))
-                    all_result_list, model_count = gm.get_models(v[0], all_result_list, recursive, **search_subckt)
-                    v[1] += model_count
+                    # print(str(v[0]))
+                    for enc in gm.encodings_to_test:
+                        found = False
+                        try:
+                            all_result_list, model_count, error_list = gm.get_models(v[0], all_result_list, recursive, enc, **search_subckt)
+                            v[1] += model_count
+                            for err in error_list:
+                                self.log(err)
+                            found = True
+                        except  UnicodeDecodeError:
+
+                             # error_list.append
+                            print(f' unicode error {enc:10} in file: {str(v[0])}')
+                        if found:
+                            break
+
                 # current_models = self.panel_list_models.GetList()
                 # skip_models = [ v[0] for k,v in current_models.items()]
                 # for k, v in all_result_list.items():
@@ -190,8 +211,21 @@ class MyFrame(SearchFrame):
             # get .models result
             if self.checkbox_model.Value:
                 for k, v in search_files.items():
-                    all_result_list, model_count = gm.get_models(v[0], all_result_list, recursive, **search_model)
-                    v[1] += model_count
+                    for enc in gm.encodings_to_test:
+                        found = False
+                        try:
+                            all_result_list, model_count, error_list = gm.get_models(v[0], all_result_list, recursive, enc, **search_model)
+                            v[1] += model_count
+                            found = True
+                            for err in error_list:
+                                self.log(err)
+                        except  UnicodeDecodeError:
+
+                             # error_list.append
+                            print(f' unicode error {enc} in file: {str(v[0])}')
+                        if found:
+                            break
+
                 # current_models = self.panel_list_models.GetList()
                 # skip_models = [ v[0] for k,v in current_models.items()]
                 # for k, v in all_result_list.items():
@@ -248,20 +282,30 @@ class MyFrame(SearchFrame):
         # self.text_ctrl_number_of_folders.SetValue('0')
         self.panel_list_extensions.ClearList()
         self.text_ctrl_number_of_extensions.SetValue('0')
+        self.text_ctrl_log.SetValue('')
 
     def OnSearchSelected(self, event):
         item = event.GetItem()
         print("OnItemSelected: %d" % event.Index)
-        index = self.panel_list_search.getOrgIndex(event.Index)
-        selected = self.panel_list_search.itemDataMap[index]
-        if selected[1].upper() == search_subckt['model']:
-            args = search_subckt
-        else:
-            args = search_model
-        filepath = selected[2]
-        string = selected[0]
-        model_body = gm.get_model_body(filepath, string, True, **args)
-        print(model_body)
+        # get all:
+        indices = []
+        ind = self.panel_list_search.list.GetFirstSelected()
+        while ind > 0:
+            indices.append(ind)
+            ind = self.panel_list_search.list.GetNextSelected(ind)
+        print(f'selected {str(indices)}')
+        model_body =[]
+        for i in indices:
+            index = self.panel_list_search.getOrgIndex(i)
+            selected = self.panel_list_search.itemDataMap[index]
+            if selected[1].upper() == search_subckt['model']:
+                args = search_subckt
+            else:
+                args = search_model
+            filepath = selected[2]
+            string = selected[0]
+            model_body += gm.get_model_body(filepath, string, True, **args)
+            print(model_body)
         self.text_ctrl_content.SetValue(''.join(model_body))
 
     def on_checkbox_recursive(self, event):
@@ -335,13 +379,20 @@ class MyFrame(SearchFrame):
     def on_add(self, event):
         self.panel_list_folders.AppendList({1: folder_data[2]})
 
-    def MakeMenu(self):
+
+
+
+    def make_menu(self):
         menu = wx.Menu()
         item = menu.Append(-1, "Recent Searches...")
         item.Enable(False)
         for index in range(len(self.history)):
             menu.Append(self.hist_ref[index], self.history[index])
         return menu
+
+    def log(self, text, str_end='\n'):
+        """logging to window"""
+        self.text_ctrl_log.write(text+str_end)
 
 
 class MyApp(wx.App):

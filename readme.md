@@ -1,6 +1,6 @@
 # simulation model retriever
 
-intended to make finding models easy and select possible on some parameters.
+intended to make finding models easy.
 
 targets
 - search thru all text files and remember the extension.
@@ -15,21 +15,25 @@ targets
 views:
 
 first page
-- search entry with simple or no wildchars, 
-activate on button or enter
+- search entry with no wildchars (empty search all, literal string if found in name, bss finds BSS170 etc.) 
+activate on button or enter, clear clears all searches
 - checkbox for model recursion
-  - must be checked to find models within subckt 
-- checkbox model
-- checkbox subckt
+  - must be checked to find models within .subckt 
+- checkbox model (look for .model)
+- checkbox subckt (look for .subckt)
 - search result
   - simple list with found names
 - extracted model with folder, file and extension
 
 sec page
-- list with found extension (with checkbox)
+- list with found models (PNP, D etc), uncheck to repeat search without model.
+
 
 third page
-- list with folders with checkbox
+- file extension (uncheck to skip in next search) checkbox)
 
-4th page
-- list with models with checkbox
+third page
+- list with all files found (uncheck to skip file or clear when changing folder list)
+
+fourth page
+- list with folders with checkbox

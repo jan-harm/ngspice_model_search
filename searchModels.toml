@@ -1,13 +1,17 @@
-search_folder = "/home/jan/local/home/jan/development/cad/KiCad-Spice-Library-master/Models/Manufacturer"
+search_folder = "/home/jan/local/home/jan/development/cad/KiCad-Spice-Library-master/Models/Diode"
 destination_folder = "/home/jan/local/home/jan/development/cad/KiCad-Spice-Library-master/my_lib"
 check_recursive = false
 check_model = true
 check_subckt = true
 history = [
+    "OPAMP",
+    "OPAMP1",
+    "VC1",
+    "D1N752",
     "SUB614",
     "FZT",
     "SUB614",
     "FZT",
     "Z",
 ]
-history_length = "10"
+history_length = "11"
