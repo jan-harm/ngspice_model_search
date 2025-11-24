@@ -13,11 +13,16 @@ from pathlib import Path
 
 #---------------------------------------------------------------------------
 class Log():
-    def init(self):
-        pass
+    def __init__(self):
+        self.write_function = print
+
+    def set_output(self, write_function):
+        self.write_function = write_function
+
     def WriteText(self,txt):
-        print(txt)
+        self.write_function(txt + '\n')
 log = Log()
+
 musicheaders = ['Artist', 'Title', 'Genre']
 musicdata = {
 1 : ("Bad English", "The Price Of Love", "Rock"),
@@ -314,7 +319,7 @@ class NbListCtrlPanel(wx.Panel, listmix.ColumnSorterMixin):
 
         if item != wx.NOT_FOUND and flags & wx.LIST_HITTEST_ONITEM:
             self.list.Select(item)
-            print(f'item {item} selected')
+            # print(f'item {item} selected')
             self.currentItem = item
 
         event.Skip()
@@ -327,12 +332,12 @@ class NbListCtrlPanel(wx.Panel, listmix.ColumnSorterMixin):
         """ call local shell for edit or file menu """
         if not args: return
         if Path(args[0]).resolve().is_dir():
-            print('open folder')
+            # print('open folder')
             sub = subprocess.Popen(["nautilus", args[0]])
         else:
-            print('open file')
+            # print('open file')
             subprocess.Popen(["gedit", args[0]])
-        print('done')
+        # print('done')
 
     def OnItemSelected(self, event):
         ##print(event.GetItem().GetTextColour())
@@ -474,15 +479,13 @@ class NbListCtrlPanel(wx.Panel, listmix.ColumnSorterMixin):
         item = self.list.GetItem(self.currentItem)
         index = self.getOrgIndex(self.currentItem)
         if self.column2open is None:
-            self.log.WriteText("item: %s, Id:%s, Data:%s" %(self.itemDataMap[index][0],
-                                                       item.Id,
-                                                       self.list.GetItemData(self.currentItem)))
+            self.log.WriteText("no item to open")
 
         else:
             self.log.WriteText("file/path: %s, Id:%s, Data:%s" % (self.itemDataMap[index][self.column2open],
                                                          item.Id,
                                                          self.list.GetItemData(self.currentItem)))
-            print(f'to open: {self.itemDataMap[index][self.column2open]}')
+            # print(f'to open: {self.itemDataMap[index][self.column2open]}')
             self.call_shell_command_from_local_menu([self.itemDataMap[index][self.column2open]])
         # self.list.GetItemText(self.currentItem))
 

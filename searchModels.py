@@ -3,7 +3,7 @@
 from xml.etree.ElementPath import prepare_descendant
 
 import wx
-from Gui import SearchFrame
+from Gui import SearchFrame, log
 from pathlib import Path
 from spice_search import get_folders, get_files as gf, get_models as gm
 import tomli
@@ -15,7 +15,7 @@ import tomli_w
 from spice_search.get_models import get_models
 
 
-# todo: remove print statements
+# todo: remove print statements (and add logging)
 # todo: save result as .lib or .cir file (now cntrl-a, ctrl-c/v)
 # todo: open file in editor with encoding options (also from search menu)
 # todo: open edit with proper decoding
@@ -65,6 +65,9 @@ class MyFrame(SearchFrame):
         if 'check_subckt' in self.config:
             self.checkbox_subckt.SetValue(self.config['check_subckt'])
 
+        log.set_output(self.text_ctrl_log.write)
+        self.log = log.WriteText
+
         self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnSearchSelected, self.panel_list_search.list)
         #prepare search menu
         if not 'history_length'  in self.config:
@@ -101,8 +104,8 @@ class MyFrame(SearchFrame):
 
     def on_search(self, event):
         search_string = self.search_ctrl_1.GetValue().upper()
-        print(f' searching for: {search_string}')
-        print(f'searching in: {self.text_ctrl_search_folder.Value}')
+        self.log(f' searching for: {search_string}')
+        self.log(f'searching in: {self.text_ctrl_search_folder.Value}')
 
         path = Path(self.text_ctrl_search_folder.Value).absolute().resolve(strict=False)
         if self.text_ctrl_search_folder.Value == '':
@@ -147,6 +150,7 @@ class MyFrame(SearchFrame):
                 present_folder_list[index] = [str(f), 0, 0, True]
             self.panel_list_folders.PopulateList(present_folder_list)
             self.text_ctrl_number_of_folders.SetValue(str(len(present_folder_list)))
+            self.log(f'folders found {str(len(present_folder_list))}')
 
             # present_folder_list = self.panel_list_folders.GetList()
             itemchecked = self.panel_list_folders.getChecked()
@@ -165,6 +169,7 @@ class MyFrame(SearchFrame):
                     present_extensions[index] = v
             self.panel_list_extensions.PopulateList(present_extensions)
             self.text_ctrl_number_of_extensions.SetValue(str(len(present_extensions)))
+            self.log(f'extensions found {str(len(present_extensions))}')
 
             # update files
             skip_files = [ v[0] for k,v in present_file_list.items()]
@@ -174,6 +179,7 @@ class MyFrame(SearchFrame):
                     present_file_list[index] = v
             self.panel_list_files.PopulateList(present_file_list)
             self.text_ctrl_number_of_files.SetValue(str(len(present_file_list)))
+            # self.log(f'files found {str(len(present_file_list))}')
 
             # get checked files
             itemschecked = self.panel_list_files.getChecked()
@@ -188,7 +194,6 @@ class MyFrame(SearchFrame):
             # get subckt results
             if self.checkbox_subckt.Value:
                 for k, v in search_files.items():
-                    # print(str(v[0]))
                     for enc in self.decode_priority:
                         found = False
                         try:
@@ -238,6 +243,7 @@ class MyFrame(SearchFrame):
                 # self.panel_list_models.PopulateList(current_models)
             self.panel_list_files.PopulateList(present_file_list) # update the count
             self.text_ctrl_number_of_files.SetValue(str(len(present_file_list)))
+            self.log(f'files found {str(len(present_file_list))}')
 
             # update model list
             present_model_list = self.panel_list_models.GetList()
@@ -258,6 +264,8 @@ class MyFrame(SearchFrame):
 
             self.panel_list_models.PopulateList(present_model_list)
             self.text_ctrl_number_of_models.SetValue(str(len(present_model_list)))
+            self.log(f'differen models found {str(len(present_model_list))}')
+
 
             # filter result and build list
             # get used models
@@ -273,6 +281,8 @@ class MyFrame(SearchFrame):
 
             self.panel_list_search.PopulateList(result_list)
             self.text_ctrl_search_count.SetValue((str(len(result_list))))
+            self.log(f'items found {str(len(result_list))}')
+
 
     def on_clear(self, event):
         self.panel_list_folders.ClearList()
@@ -288,15 +298,13 @@ class MyFrame(SearchFrame):
         self.text_ctrl_log.SetValue('')
 
     def OnSearchSelected(self, event):
-        item = event.GetItem()
-        print("OnItemSelected: %d" % event.Index)
         # get all:
         indices = []
         ind = self.panel_list_search.list.GetFirstSelected()
-        while ind > 0:
+        while ind != -1:
             indices.append(ind)
             ind = self.panel_list_search.list.GetNextSelected(ind)
-        print(f'selected {str(indices)}')
+        # print(f'selected {str(indices)}')
         model_body =[]
         for i in indices:
             index = self.panel_list_search.getOrgIndex(i)
@@ -307,16 +315,18 @@ class MyFrame(SearchFrame):
                 args = search_model
             filepath = selected[2]
             string = selected[0]
+            self.log(f'searching "{string}" in file: {str(filepath)} ')
             Found = False
             for enc in self.decode_priority:
                 try:
-                    model_body += gm.get_model_body(filepath, string, True, **args)
-                    Found = True
+                    model_body += gm.get_model_body(filepath, string, recursive=self.checkbox_recursive.Value,
+                                                    encoding=enc, **args)
+                    Found = len(model_body) > 0
                 except  UnicodeDecodeError:
                     self.log(f'model decoding error using {enc} in file: {str(filepath)}')
                 if Found:
                     break
-            print(model_body)
+            # print(model_body)
         self.text_ctrl_content.SetValue(''.join(model_body))
 
     def on_checkbox_recursive(self, event):
