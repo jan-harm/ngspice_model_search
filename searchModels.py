@@ -14,7 +14,7 @@ import tomli_w
 
 from spice_search.get_models import get_models
 
-# todo: make decoding selection and add to file decoding
+
 # todo: remove print statements
 # todo: save result as .lib or .cir file (now cntrl-a, ctrl-c/v)
 # todo: open file in editor with encoding options (also from search menu)
@@ -198,9 +198,8 @@ class MyFrame(SearchFrame):
                                 self.log(err)
                             found = True
                         except  UnicodeDecodeError:
+                            self.log(f'body search decoding error using {enc} in file: {str(v[0])}')
 
-                             # error_list.append
-                            print(f' unicode error {enc:10} in file: {str(v[0])}')
                         if found:
                             break
 
@@ -225,8 +224,8 @@ class MyFrame(SearchFrame):
                                 self.log(err)
                         except  UnicodeDecodeError:
 
-                             # error_list.append
-                            print(f' unicode error {enc} in file: {str(v[0])}')
+                            # error_list.append
+                            self.log(f'model decoding error using {enc} in file: {str(v[0])}')
                         if found:
                             break
 
@@ -308,7 +307,15 @@ class MyFrame(SearchFrame):
                 args = search_model
             filepath = selected[2]
             string = selected[0]
-            model_body += gm.get_model_body(filepath, string, True, **args)
+            Found = False
+            for enc in self.decode_priority:
+                try:
+                    model_body += gm.get_model_body(filepath, string, True, **args)
+                    Found = True
+                except  UnicodeDecodeError:
+                    self.log(f'model decoding error using {enc} in file: {str(filepath)}')
+                if Found:
+                    break
             print(model_body)
         self.text_ctrl_content.SetValue(''.join(model_body))
 

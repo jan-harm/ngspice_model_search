@@ -107,7 +107,7 @@ def get_models(file_path, model_list={}, recursive=True, encoding='utf-8', **sea
 
     return model_list, model_count, error_list
 
-def get_model_body(file_path, model_name, recursive=True, **search_arguments):
+def get_model_body(file_path, model_name, recursive=True, encoding='utf-8', **search_arguments):
     """search for models in file according to search_arguments
     retuns a dict { cnt: [ model, name , callable line, True]} """
     model_text = []
@@ -120,7 +120,7 @@ def get_model_body(file_path, model_name, recursive=True, **search_arguments):
     recursive_cnt = 0
     recursive_level = 0
 
-    for line in open(file_path):
+    for line in open(file_path, encoding=encoding, errors='ignore'):
         sline = line.split()
         if state in ['done', 'after_done']:
             break

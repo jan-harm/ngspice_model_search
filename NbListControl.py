@@ -109,10 +109,11 @@ class TestListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 
 
 class NbListCtrlPanel(wx.Panel, listmix.ColumnSorterMixin):
-    def __init__(self, parent, headers, log):
+    def __init__(self, parent, headers, column2open=None, log=None):
         wx.Panel.__init__(self, parent, -1, style=wx.WANTS_CHARS)
 
         self.log = log
+        self.column2open = column2open
         tID = wx.NewIdRef()
 
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -471,10 +472,18 @@ class NbListCtrlPanel(wx.Panel, listmix.ColumnSorterMixin):
     def OnPopupOpen(self, event):
         self.log.WriteText("Popup open\n")
         item = self.list.GetItem(self.currentItem)
-        self.log.WriteText("file: %s, Id:%s, Data:%s" %(item.Text,
+        index = self.getOrgIndex(self.currentItem)
+        if self.column2open is None:
+            self.log.WriteText("item: %s, Id:%s, Data:%s" %(self.itemDataMap[index][0],
                                                        item.Id,
                                                        self.list.GetItemData(self.currentItem)))
-        self.call_shell_command_from_local_menu([item.Text])
+
+        else:
+            self.log.WriteText("file/path: %s, Id:%s, Data:%s" % (self.itemDataMap[index][self.column2open],
+                                                         item.Id,
+                                                         self.list.GetItemData(self.currentItem)))
+            print(f'to open: {self.itemDataMap[index][self.column2open]}')
+            self.call_shell_command_from_local_menu([self.itemDataMap[index][self.column2open]])
         # self.list.GetItemText(self.currentItem))
 
 
