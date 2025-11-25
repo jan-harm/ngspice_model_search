@@ -4,6 +4,9 @@ check_recursive = false
 check_model = true
 check_subckt = true
 history = [
+    "DL3038A",
+    "BB",
+    "DL3038A",
     "OPAMP",
     "OPAMP1",
     "VC1",
@@ -12,12 +15,11 @@ history = [
     "FZT",
     "SUB614",
     "FZT",
-    "Z",
 ]
 history_length = "11"
 decode_priority = [
-    "ISO-8859-15",
-    "utf-8",
     "shift_jis",
     "Windows-1252",
+    "ISO-8859-15",
+    "utf-8",
 ]

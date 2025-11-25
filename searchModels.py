@@ -92,6 +92,7 @@ class MyFrame(SearchFrame):
 
 
     def save_config(self):
+        self.log('save config')
         with open(self.config_path, "wb") as f:
             tomli_w.dump(self.config, f)
 
@@ -374,10 +375,10 @@ class MyFrame(SearchFrame):
     def on_clear_extension_list(self, event):
         self.panel_list_extensions.ClearList()
 
-    def on_clear_files_list(self, event):
+    def on_clear_file_list(self, event):
         self.panel_list_files.ClearList()
 
-    def on_clear_list_folders(self, event):
+    def on_clear_folder_list(self, event):
         self.panel_list_folders.ClearList()
 
     def on_destination_folder(self, event):
