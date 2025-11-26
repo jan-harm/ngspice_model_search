@@ -1,4 +1,4 @@
-search_folder = "/home/jan/local/home/jan/development/cad/KiCad-Spice-Library-master/Models/Diode"
+search_folder = "/home/jan/local/home/jan/development/cad/KiCad-Spice-Library-master/Models/Optocoupler"
 destination_folder = "/home/jan/local/home/jan/development/cad/KiCad-Spice-Library-master/my_lib"
 check_recursive = false
 check_model = true
@@ -18,8 +18,8 @@ history = [
 ]
 history_length = "11"
 decode_priority = [
-    "shift_jis",
-    "Windows-1252",
-    "ISO-8859-15",
     "utf-8",
+    "shift_jis",
+    "ISO-8859-15",
+    "Windows-1252",
 ]

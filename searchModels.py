@@ -15,8 +15,6 @@ import tomli_w
 from spice_search.get_models import get_models
 
 
-# todo: remove print statements (and add logging)
-# todo: save result as .lib or .cir file (now cntrl-a, ctrl-c/v)
 # todo: open file in editor with encoding options (also from search menu)
 # todo: open edit with proper decoding
 # todo: make local menu specific
@@ -45,6 +43,10 @@ search_model = {
     'max_comment_count': 2  # comments before the .model is found
 }
 
+wildcard = "library files (*.lib)|*.lib|"     \
+           "sub circuit files (*.cir)|*.cir|" \
+           "module file files (*.mod)|*.mod|"  \
+           "All files (*.*)|*.*"
 
 class MyFrame(SearchFrame):
     def __init__(self, *args, **kwds):
@@ -67,7 +69,8 @@ class MyFrame(SearchFrame):
 
         log.set_output(self.text_ctrl_log.write)
         self.log = log.WriteText
-
+        self.filename = '' # pre chosen file name for the save as function
+        self.select_result = []
         self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnSearchSelected, self.panel_list_search.list)
         #prepare search menu
         if not 'history_length'  in self.config:
@@ -307,6 +310,7 @@ class MyFrame(SearchFrame):
             ind = self.panel_list_search.list.GetNextSelected(ind)
         # print(f'selected {str(indices)}')
         model_body =[]
+        self.filename = ''
         for i in indices:
             index = self.panel_list_search.getOrgIndex(i)
             selected = self.panel_list_search.itemDataMap[index]
@@ -316,6 +320,8 @@ class MyFrame(SearchFrame):
                 args = search_model
             filepath = selected[2]
             string = selected[0]
+            if self.filename == '':
+                self.filename = string  # take first selected as file name
             self.log(f'searching "{string}" in file: {str(filepath)} ')
             Found = False
             for enc in self.decode_priority:
@@ -327,7 +333,7 @@ class MyFrame(SearchFrame):
                     self.log(f'model decoding error using {enc} in file: {str(filepath)}')
                 if Found:
                     break
-            # print(model_body)
+        self.select_result = model_body
         self.text_ctrl_content.SetValue(''.join(model_body))
 
     def on_checkbox_recursive(self, event):
@@ -344,6 +350,27 @@ class MyFrame(SearchFrame):
         checked = self.checkbox_subckt.Value
         self.config['check_subckt'] = checked
         self.save_config()
+
+    def on_save_result_as(self, event):
+
+        txt = self.text_ctrl_content.Value
+        print(txt)
+        dlg = wx.FileDialog(
+            self, message="Save file as ...", defaultDir=self.text_ctrl_destination_folder.Value,
+            defaultFile=self.filename + '.lib', wildcard=wildcard, style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT
+        )
+
+        # This sets the default filter that the user will initially see. Otherwise,
+        # the first filter in the list will be used by default.
+        dlg.SetFilterIndex(1)
+
+        # Show the dialog and retrieve the user response. If it is the OK response,
+        # process the data.
+        if dlg.ShowModal() == wx.ID_OK:
+            path = dlg.GetPath()
+            self.log(f'saving:  {path}')
+            with open(path, 'w') as f:
+                f.writelines(self.select_result)
 
     def on_text_ctrl_search_folder_enter(self, event):
         search_path = Path(self.text_ctrl_search_folder.Value).resolve()
