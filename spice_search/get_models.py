@@ -132,7 +132,7 @@ def get_model_body(file_path, model_name, recursive=True, encoding='utf-8', **se
 
         if state == 'comment':
             comment_count += 1
-            if comment_count > search_args['max_comment_count']:
+            if comment_count > int(search_args['max_comment_count']):
                 model_text.pop(0)
 
             if (len(sline) == 0) or ('*' in sline[0]):

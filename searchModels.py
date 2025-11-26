@@ -24,7 +24,7 @@ configuration_file = "searchModels.toml"
 initial_decode_priority = ['utf-8', 'ISO-8859-15', 'SHIFT_JIS']
 
 #search parameters
-# todo: transfer patterns to config
+
 search_subckt = {
     'model': '.SUBCKT',  # name to search for
     'model_pos': 0,      # which word for the model (after a split)
@@ -39,7 +39,7 @@ search_model = {
     'model_pos': 2,      # which word for the model (after a split)
     'name_pos':  1,      # which word is the name of the model
     'model_end': '',
-    'continuation': False,  # with '+' or //
+    'continuation': False,  # with '+' or // only
     'max_comment_count': 2  # comments before the .model is found
 }
 
@@ -71,6 +71,8 @@ class MyFrame(SearchFrame):
         self.log = log.WriteText
         self.filename = '' # pre chosen file name for the save as function
         self.select_result = []
+        self.search_subckt = search_subckt
+        self.search_model = search_model
         self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnSearchSelected, self.panel_list_search.list)
         #prepare search menu
         if not 'history_length'  in self.config:
@@ -92,6 +94,20 @@ class MyFrame(SearchFrame):
             self.config['decode_priority'] = initial_decode_priority
         self.decode_priority = self.config['decode_priority']
         self.list_box_priority.Set(self.decode_priority)
+
+        if 'search_subckt' in self.config:
+            self.search_subckt = self.config['search_subckt']
+        else:
+            self.search_subckt = search_subckt
+            self.config['search_subckt'] = search_subckt
+        self.text_ctrl_comment_before_subckt.SetValue(str(self.search_subckt['max_comment_count']))
+        if 'search_model' in self.config:
+            self.search_model = self.config['search_model']
+        else:
+            self.search_model = search_model
+            self.config['search_modrl'] = search_model
+        self.text_ctrl_comment_before_model.SetValue(str(self.search_model['max_comment_count']))
+
 
 
     def save_config(self):
@@ -226,7 +242,7 @@ class MyFrame(SearchFrame):
                     for enc in self.decode_priority:
                         found = False
                         try:
-                            all_result_list, model_count, error_list = gm.get_models(v[0], all_result_list, recursive, enc, **search_model)
+                            all_result_list, model_count, error_list = gm.get_models(v[0], all_result_list, recursive, enc, **self.search_model)
                             v[1] += model_count
                             found = True
                             for err in error_list:
@@ -317,7 +333,7 @@ class MyFrame(SearchFrame):
             if selected[1].upper() == search_subckt['model']:
                 args = search_subckt
             else:
-                args = search_model
+                args = self.search_model
             filepath = selected[2]
             string = selected[0]
             if self.filename == '':
@@ -454,8 +470,17 @@ class MyFrame(SearchFrame):
             self.config['decode_priority'] = self.decode_priority
             self.save_config()
 
+    def on_comment_before_model(self, event):
+        value = int(self.text_ctrl_comment_before_model.Value)
+        self.search_model['max_comment_count'] = value
+        self.config['search_model']['max_comment_count'] = value
+        self.save_config()
 
-
+    def on_comment_before_subckt(self, event):
+        value = int(self.text_ctrl_comment_before_subckt.Value)
+        self.search_subckt['max_comment_count'] = value
+        self.config['search_subckt']['max_comment_count'] = value
+        self.save_config()
 
     def make_menu(self):
         menu = wx.Menu()

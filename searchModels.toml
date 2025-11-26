@@ -1,4 +1,4 @@
-search_folder = "/home/jan/local/home/jan/development/cad/KiCad-Spice-Library-master/Models/Optocoupler"
+search_folder = "/home/jan/local/home/jan/development/cad/KiCad-Spice-Library-master/Models"
 destination_folder = "/home/jan/local/home/jan/development/cad/KiCad-Spice-Library-master/my_lib"
 check_recursive = false
 check_model = true
@@ -23,3 +23,19 @@ decode_priority = [
     "ISO-8859-15",
     "Windows-1252",
 ]
+
+[search_subckt]
+model = ".SUBCKT"
+model_pos = 0
+name_pos = 1
+model_end = ".ENDS"
+continuation = true
+max_comment_count = 20
+
+[search_modrl]
+model = ".MODEL"
+model_pos = 2
+name_pos = 1
+model_end = ""
+continuation = false
+max_comment_count = 2
