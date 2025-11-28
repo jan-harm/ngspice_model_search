@@ -12,7 +12,7 @@ import subprocess
 from pathlib import Path
 
 #---------------------------------------------------------------------------
-class Log():
+class Log:
     def __init__(self):
         self.write_function = print
 
@@ -309,7 +309,7 @@ class NbListCtrlPanel(wx.Panel, listmix.ColumnSorterMixin):
 
     # Used by the ColumnSorterMixin, see wx/lib/mixins/listctrl.py
     def GetSortImages(self):
-        return (self.sm_dn, self.sm_up)
+        return self.sm_dn, self.sm_up
 
     def OnRightDown(self, event):
         x = event.GetX()
@@ -440,34 +440,20 @@ class NbListCtrlPanel(wx.Panel, listmix.ColumnSorterMixin):
             self.popupID2 = wx.NewIdRef()
             self.popupID3 = wx.NewIdRef()
             self.popupID4 = wx.NewIdRef()
-            self.popupID5 = wx.NewIdRef()
-            self.popupID6 = wx.NewIdRef()
-            self.popupID7 = wx.NewIdRef()
-            self.popupID8 = wx.NewIdRef()
-            self.popupID9 = wx.NewIdRef()
 
             self.Bind(wx.EVT_MENU, self.OnPopupOpen, id=self.popupID1)
-            self.Bind(wx.EVT_MENU, self.OnPopupTwo, id=self.popupID2)
-            self.Bind(wx.EVT_MENU, self.OnPopupThree, id=self.popupID3)
-            self.Bind(wx.EVT_MENU, self.OnPopupFour, id=self.popupID4)
-            self.Bind(wx.EVT_MENU, self.OnPopupFive, id=self.popupID5)
-            self.Bind(wx.EVT_MENU, self.OnPopupSix, id=self.popupID6)
-            self.Bind(wx.EVT_MENU, self.OnCheckAllBoxes, id=self.popupID7)
-            self.Bind(wx.EVT_MENU, self.OnUnCheckAllBoxes, id=self.popupID8)
-            self.Bind(wx.EVT_MENU, self.OnGetItemsChecked, id=self.popupID9)
+            self.Bind(wx.EVT_MENU, self.OnPopupClear, id=self.popupID2)
+            self.Bind(wx.EVT_MENU, self.OnCheckAllBoxes, id=self.popupID3)
+            self.Bind(wx.EVT_MENU, self.OnUnCheckAllBoxes, id=self.popupID4)
 
         # make a menu
         menu = wx.Menu()
         # add some items
-        menu.Append(self.popupID1, "Open")   # specific item (open file or folder)
-        menu.Append(self.popupID2, "Iterate Selected tbd")
-        menu.Append(self.popupID3, "ClearAll and repopulate tbd")
-        menu.Append(self.popupID4, "DeleteAllItems tbd")
-        menu.Append(self.popupID5, "GetItem tbd ")
-        menu.Append(self.popupID6, "Edit tbd")
-        menu.Append(self.popupID7, "Check All Boxes")
-        menu.Append(self.popupID8, "UnCheck All Boxes")
-        menu.Append(self.popupID9, "Get Checked Items tbd")
+        if not self.column2open is None:
+            menu.Append(self.popupID1, "Open")   # specific item (open file or folder only)
+        menu.Append(self.popupID2, "Delete All Items")
+        menu.Append(self.popupID3, "Check All Boxes")
+        menu.Append(self.popupID4, "UnCheck All Boxes")
 
         # Popup the menu.  If an item is selected then its handler
         # will be called before PopupMenu returns.
@@ -485,37 +471,14 @@ class NbListCtrlPanel(wx.Panel, listmix.ColumnSorterMixin):
             self.log.WriteText("file/path: %s, Id:%s, Data:%s" % (self.itemDataMap[index][self.column2open],
                                                          item.Id,
                                                          self.list.GetItemData(self.currentItem)))
-            # print(f'to open: {self.itemDataMap[index][self.column2open]}')
             self.call_shell_command_from_local_menu([self.itemDataMap[index][self.column2open]])
-        # self.list.GetItemText(self.currentItem))
 
 
 
-    def OnPopupTwo(self, event):
-        self.log.WriteText("Selected items:\n")
-        index = self.list.GetFirstSelected()
 
-        while index != -1:
-            self.log.WriteText("      %s: %s\n" % (self.list.GetItemText(index),
-                                                   self.getColumnText(index, 1)))
-            index = self.list.GetNextSelected(index)
+    def OnPopupClear(self, event):
+        self.ClearList()
 
-    def OnPopupThree(self, event):
-        self.log.WriteText("Popup three\n")
-        # self.list.ClearAll()
-        # wx.CallAfter(self.AppendList, folder_data2, True)
-
-    def OnPopupFour(self, event):
-        self.list.DeleteAllItems()
-
-    def OnPopupFive(self, event):
-        item = self.list.GetItem(self.currentItem)
-        self.log.WriteText("Text:%s, Id:%s, Data:%s" %(item.Text,
-                                                       item.Id,
-                                                       self.list.GetItemData(self.currentItem)))
-
-    def OnPopupSix(self, event):
-        self.list.EditLabel(self.currentItem)
 
 
 # --------------------------------------------------------------------

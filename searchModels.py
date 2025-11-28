@@ -1,22 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-from xml.etree.ElementPath import prepare_descendant
+
 
 import wx
 from Gui import SearchFrame, log
 from pathlib import Path
-from spice_search import get_folders, get_files as gf, get_models as gm
+from spice_search import get_files as gf, get_models as gm
 import tomli
 import tomli_w
 
-
-
-
-from spice_search.get_models import get_models
-
-
-# todo: open file in editor with encoding options (also from search menu)
-# todo: open edit with proper decoding
+# todo: open file in editor with encoding options (also from search menu) (todo skipped)
+# todo: open edit with proper decoding (todo skipped)
 # todo: make local menu specific
 
 configuration_file = "searchModels.toml"
@@ -116,8 +110,8 @@ class MyFrame(SearchFrame):
             tomli_w.dump(self.config, f)
 
     def on_search_history(self, event):
-        id = event.GetId()
-        index = [ k for k, v in self.hist_ref.items() if v == id][0]
+        hist_id = event.GetId()
+        index = [k for k, v in self.hist_ref.items() if v == hist_id][0]
         if index < len(self.history):
             self.search_ctrl_1.SetValue(self.history[index])
 
@@ -150,7 +144,7 @@ class MyFrame(SearchFrame):
                 path = path.parent
             self.log(str(path))
             # update history menu
-            if search_string != "" and ((self.history_length) == 0 or search_string != self.history[0]):
+            if search_string != "" and (self.history_length == 0 or search_string != self.history[0]):
                 self.history.insert(0, search_string)
                 if len(self.history) > self.history_length:
                     self.history.pop(-1)
@@ -449,7 +443,7 @@ class MyFrame(SearchFrame):
         if selected == wx.NOT_FOUND:
             selected = 0
             self.list_box_priority.SetSelection(selected)
-        if selected > 0 and selected < len(self.decode_priority):
+        if 0 < selected < len(self.decode_priority):
             self.decode_priority[selected-1], self.decode_priority[selected] = (self.decode_priority[selected],
                                                                                 self.decode_priority[selected-1])
             self.list_box_priority.Set(self.decode_priority)
@@ -462,7 +456,7 @@ class MyFrame(SearchFrame):
         if selected == wx.NOT_FOUND:
             selected = 0
             self.list_box_priority.SetSelection(selected)
-        if selected >= 0 and selected < len(self.decode_priority)-1:
+        if 0 <= selected < len(self.decode_priority)-1:
             self.decode_priority[selected+1], self.decode_priority[selected] = (self.decode_priority[selected],
                                                                                 self.decode_priority[selected+1])
             self.list_box_priority.Set(self.decode_priority)
