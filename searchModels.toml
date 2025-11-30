@@ -1,5 +1,5 @@
-search_folder = "/home/jan/local/home/jan/development/cad/KiCad-Spice-Library-master/Models"
-destination_folder = "/home/jan/local/home/jan/development/cad/KiCad-Spice-Library-master/my_lib"
+search_folder = "/home/"
+destination_folder = "/home/"
 check_recursive = false
 check_model = true
 check_subckt = true
