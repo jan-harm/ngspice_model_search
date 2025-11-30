@@ -3,7 +3,7 @@
 intended to make finding models easy.
 inspired by: https://github.com/kicad-spice-library/KiCad-Spice-Library
 
-targets
+## targets
 - search thru all text files and remember the extension.
 - find .model and .subckt be aware of nesting
 - with models mark the type (NMOS, NPN etc. and allow for exclusion)
@@ -13,7 +13,7 @@ targets
 - try to keep comment before subckt (* only)
   - in most cases the comment is direct before the subckt or model
 
-views:
+## views:
 
 first page
 - search entry with no wildchars (empty search all, literal string if found in name, bss finds BSS170 etc.) 
@@ -25,10 +25,11 @@ activate on button or enter, clear clears all searches
 - search result
   - simple list with found names
 - extracted model with folder, file and extension
+- multiple select to combine models
+- save selected as new lib file
 
 sec page
 - list with found models (PNP, D etc), uncheck to repeat search without model.
-
 
 third page
 - file extension (uncheck to skip in next search) checkbox)
@@ -38,3 +39,9 @@ third page
 
 fourth page
 - list with folders with checkbox
+
+fifth page 
+- some configuration items like paths and encoding/codepage to use. edit toml file to add (valid) code pages
+  - see  [codecs — Codec registry and base classes — Python 3.14.0 documentation](https://docs.python.org/3/library/codecs.html#codec-base-classes) for different codecs.
+
+![img.png](img.png)
